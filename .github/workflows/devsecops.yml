@@ -8,7 +8,7 @@ jobs:
       - name: Récupération du code source
         uses: actions/checkout@v4
 
-      - name: Contrôle des dépendances avec Trivy (Question A)
+      - name: Contrôle des dépendances avec Trivy
         run: |
           docker run --rm \
             -v "$PWD":/project \
@@ -25,7 +25,11 @@ jobs:
       - name: Récupération du code source
         uses: actions/checkout@v4
 
-      - name: Contrôle du Dockerfile avec Trivy (Question B)
+      - name: Build de l'image Docker
+        run: |
+          docker build -t breakableflask:ci .
+
+      - name: Audit de sécurité du Dockerfile et de l'image avec Trivy
         run: |
           docker run --rm \
             -v "$PWD":/project \
@@ -33,6 +37,14 @@ jobs:
             --severity HIGH,CRITICAL \
             --exit-code 1 \
             /project/Dockerfile
+
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:latest image \
+            --scanners vuln \
+            --severity HIGH,CRITICAL \
+            --exit-code 1 \
+            breakableflask:ci
 
   Deploy:
     runs-on: ubuntu-latest
