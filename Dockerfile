@@ -2,7 +2,8 @@
 FROM python:3.12-alpine AS builder
 WORKDIR /build
 
-RUN apk add --no-cache gcc musl-dev postgresql-dev
+RUN apk update && apk upgrade --no-cache \
+    && apk add --no-cache gcc musl-dev postgresql-dev
 
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
@@ -20,7 +21,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-RUN apk add --no-cache libpq \
+# Mise à jour de sécurité Alpine (corrige krb5-libs) + installation de libpq
+RUN apk update && apk upgrade --no-cache \
+    && apk add --no-cache libpq \
     && addgroup -S appgroup && adduser -S appuser -G appgroup
 
 COPY --from=builder /opt/venv /opt/venv
